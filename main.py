@@ -24,7 +24,9 @@ class PortScanner():
         self.ip_port = queue.Queue(50)
         self.open=[]
 
+    """
 
+    """
     def ip_queue(self):
         for i in self.listOrstr:
             pass
