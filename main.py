@@ -6,7 +6,6 @@ open = []
 tmp=[]
 
 class PortScanner():
-    #初始化数据
     """
     ip:传入的是一个ip还是一个ip列表。
         如果是ip，则直接将其加入ip队列，
@@ -17,31 +16,28 @@ class PortScanner():
 
     open:将打开的端口放在该列表里
     """
-    def __init__(self,listOrstr,MAX=50):
-        self.listOrstr = []
-        self.ip = queue.Queue(50)
+    def __init__(self,listOrstr:list,MAX=50):
+        self.listOrstr = listOrstr
         self.MAX = MAX
-        self.ip_port = queue.Queue(50)
+        self.ip_port = queue.Queue()
         self.open=[]
 
     """
-
+    处理传入单个或多个ip的时候，将ip便利成ip加端口 eg:  [127.0.0.1:123,127.0.0.1:124...]
     """
-    def ip_queue(self):
-        for i in self.listOrstr:
-            pass
     #将得到的数据ip或iplist将其与其端口加入队列
     def ip_port_queue(self):
-        while True:
-            if self.ip.empty() != True:
-                tmp = self.ip.get()
-                for i in range(0,65535):
-                    ip_port = tmp+":"+str(i)
-                    self.ip_port.put(ip_port)
-                    print(ip_port)
+            for i  in self.listOrstr:
+                print(i)
+                for j in range(0,65535):
+                    tmp = str(i)+":"+str(j)
+                    self.ip_port.put(tmp)
 
 
-    #遍历出每个ip的port
+    """
+    处理ip_port队列，将本机与每个ip:port建立socket链接(较慢)
+    成功链接则返回open并将其存储在self.open列表中，未成功这不返回
+    """
     def  ip_port_scaner(self):
 
         while True:
@@ -56,10 +52,14 @@ class PortScanner():
                 self.open.append(tmp1)
             except Exception as err:
                 pass
+                # print(f"{ip}:{port} close")
             finally:
                 sock.close()
 
-    #防止还没传入数据就已经将数据输出
+    """
+    MODE 
+    使用该函数，使主线程在子线程结束后推出，以获取其值
+    """
     def over(self,m_count):
         tmp_count = 0
         i = 0
@@ -76,15 +76,17 @@ class PortScanner():
                 break
 
     def begin(self):
-        Thread_ip_port = threading.Thread(target=PS.ip_port_queue)
+        Thread_ip_port = threading.Thread(target=self.ip_port_queue)
         Thread_ip_port.start()
         for i in range(self.MAX):
-            threading.Thread(target=PS.ip_port_scaner).start()
+            threading.Thread(target=self.ip_port_scaner).start()
         self.over(10)
+        return self.open
     #实现通过读取列表的方式实现多ip运行
 if __name__ == '__main__':
-    MaxThread = 50
-    PS =  PortScanner("192.168.231.16",MaxThread)
-    PS.begin()
+    MaxThread = 500
+    ip = ["192.168.231.191"]
+    PS =  PortScanner(ip,MaxThread)
+    print(PS.begin())
 
 
